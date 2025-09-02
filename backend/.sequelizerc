@@ -1,0 +1,6 @@
+const path = require("path");
+
+module.exports = {
+  modelsPath: path.resolve("src/models"),
+  config: path.resolve("config/config.cjs"),
+};
