@@ -37,33 +37,6 @@ const handleValidationError = (error) => {
     return new CustomError(error.errors[0].message, 400);
   }
 };
-const handleDuplicateFieldsDB = (error) => {
-  console.log("errrrrrror", error.original.detail);
-  // Use a regex to extract the field name and value
-  const fieldMatch = error.original.detail.match(/Key \((.+?)\)=\((.+?)\)/);
-  console.log(fieldMatch);
-
-  if (fieldMatch) {
-    const [, fieldName, fieldValue] = fieldMatch;
-    console.log(fieldName[1], "value", fieldValue[1]);
-
-    // Map of custom messages for different fields
-    const fieldMessages = {
-      name: `A template with this name already exists.`,
-      username: `The username is already taken.`,
-      phone: `This phone number is already registered.`,
-      // Add more specific mappings as needed
-    };
-
-    // Default fallback message if no specific mapping exists
-    const defaultMessage = `A record with ${fieldName} "${fieldValue}" already exists.`;
-
-    // Use specific message if available, otherwise use default
-    const message = fieldMessages[fieldName] || defaultMessage;
-
-    return new CustomError(message, 400);
-  }
-};
 
 const handleJWTError = (err) => {
   return new CustomError("Invalid token. Please log in again", 401);
