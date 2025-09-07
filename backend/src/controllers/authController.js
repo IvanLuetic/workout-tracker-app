@@ -40,7 +40,7 @@ export const signUp = async (req, res, next) => {
     email: email,
     password: hashedPassword,
   });
-  console.log("user:::", result.dataValues);
+
   return handleResponse(res, 200, "User created", result.dataValues);
 };
 
@@ -56,8 +56,6 @@ export const login = async (req, res, next) => {
   if (!result) return next(new CustomError("Incorrect credentials", 401));
   if (!(await checkPassword(password, result.dataValues.password)))
     return next(new CustomError("Incorrect password", 401));
-
-  console.log("LOGGED IN", result.dataValues);
 
   return handleResponse(res, 200, "User logged in", result.dataValues);
 };
@@ -77,6 +75,16 @@ export const protect = async (req, res, next) => {
   if (!user) return next(new CustomError("User does not exist", 400));
 
   req.user = user.dataValues;
+  next();
+};
+
+export const checkAdmin = (req, res, next) => {
+  if (req.user.isAdmin) {
+    return res.status(403).json({
+      success: false,
+      message: "Admin permissions required",
+    });
+  }
   next();
 };
 
@@ -100,4 +108,36 @@ export const logout = (req, res, next) => {
   });
 
   res.status(200).json({ message: "Logged out successfully" });
+};
+
+export const updateUser = async (req, res, next) => {
+  const userGuid = req.user.userGuid;
+  const updateData = {};
+  const { username, email } = req.body;
+  if (username) updateData.username = username;
+  if (email) updateData.email = email;
+
+  await User.update(updateData, {
+    where: { userGuid: userGuid },
+  });
+  res.status(200).json({ message: "User updated succesfully" });
+};
+
+export const deleteUser = async (req, res, next) => {
+  const userId = req.params.id;
+  const userToDelete = await User.findOne({ where: { userGuid: userId } });
+
+  if (!userToDelete) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found.",
+    });
+  }
+
+  await User.destroy({ where: { userGuid: userId } });
+
+  res.status(200).json({
+    success: true,
+    message: "User deleted successfully.",
+  });
 };

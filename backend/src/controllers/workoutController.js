@@ -3,8 +3,8 @@ import TemplateExercises from "../models/TemplateExercises.js";
 import WorkoutTemplate from "../models/WorkoutTemplate.js";
 import SessionExercises from "../models/SessionExercises.js";
 import SessionSets from "../models/SessionSets.js";
-import { ForeignKeyConstraintError, where } from "sequelize";
 import CustomError from "../utils/customError.js";
+import sequelize from "../../db/connect.js";
 
 export const handleResponse = async (res, statusCode, message, data = null) => {
   res.status(statusCode).json({
@@ -38,6 +38,15 @@ export const createWorkoutTemplate = async (req, res, next) => {
   handleResponse(res, 200, "Template created");
 };
 
+export const deleteWorkoutTemplate = async (req, res, next) => {
+  const userId = req.user.userGuid;
+  const templateName = req.body.templateName;
+  await TemplateExercises.destroy({
+    where: { userGuid: userId, name: templateName },
+  });
+  handleResponse(res, 200, "Template deleted");
+};
+
 export const getAllWorkoutTemplates = async (req, res, next) => {
   const userId = req.user.userGuid;
   const result = await WorkoutTemplate.findAll({
@@ -56,80 +65,111 @@ export const getAllWorkoutTemplates = async (req, res, next) => {
 
 export const getWorkoutSessions = async (req, res, next) => {
   const userId = req.user.userGuid;
-  const result = await WorkoutSession.findAll({
-    where: { userGuid: userId },
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 12;
+  const offset = (page - 1) * limit;
 
+  const whereQuery = { userGuid: userId };
+  if (req.query.templateName) whereQuery.templateName = req.query.templateName;
+
+  const { count, rows } = await WorkoutSession.findAndCountAll({
+    where: whereQuery,
     include: [
       {
         model: SessionExercises,
         include: [{ model: SessionSets }],
       },
     ],
-    order: [["date", "DESC"]],
+    order: [
+      ["date", "DESC"],
+
+      [SessionExercises, "exercise_number", "ASC"],
+
+      [SessionExercises, SessionSets, "set_number", "ASC"],
+    ],
+    limit,
+    offset,
+    distinct: true,
   });
+  const sessions = rows.map((session) => session.get({ plain: true }));
 
-  const sessions = result.map((session) => session.get({ plain: true }));
-  /*   let i = 0;
+  const response = {
+    sessions: sessions,
+    total: count,
+    page,
+    totalPages: Math.ceil(count / limit),
+  };
 
-  result.dataValues.forEach(async (session) => {
-    sessions[i].name = result.dataValues.name;
-    sessions[i].date = result.dataValues.date;
-    sessions[i].notes = result.dataValues.notes;
-    const sessionGuid = result.dataValues.sessionGuid;
-    const result1 = await SessionExercises.findAll({
-      where: { sessionGuid: sessionGuid },
-    });
-    sessions[i].exercises = result.dataValues.name;
-    result1.dataValues.forEach(async (exercise) => {
-      const exerciseGuid = result1.dataValues.exerciseGuid;
-      const result2 = await SessionSets.findAll({
-        where: { exerciseGuid: exerciseGuid },
-      });
-    });
-  }); */
-
-  handleResponse(res, 200, "Sessions sent", sessions);
+  handleResponse(res, 200, "Sessions sent", response);
 };
+
 export const createWorkoutSession = async (req, res, next) => {
-  console.log(req.body);
-  const userId = req.user.userGuid;
-  const { session, exercises } = req.body;
+  const transaction = await sequelize.transaction();
 
-  let templateDB = null;
+  try {
+    const userId = req.user.userGuid;
+    const { session, exercises } = req.body;
 
-  if (session.templateName) {
-    templateDB = await WorkoutTemplate.findOne({
-      where: {
-        name: session.templateName,
-        userGuid: userId,
-      },
-    });
-  }
+    let templateDB = null;
 
-  const sessionDB = await WorkoutSession.create({
-    userGuid: userId,
-    date: session.date,
-    notes: session.notes || null,
-    templateName: session.templateName || "Untitled",
-    templateGuid: templateDB?.dataValues.templateGuid || null,
-  });
-
-  for (const exercise of exercises) {
-    const result1 = await SessionExercises.create({
-      sessionGuid: sessionDB.dataValues.sessionGuid,
-      name: exercise.name,
-      exercise_number: exercise.exercise_order,
-    });
-    for (const set of exercise.sets) {
-      const result2 = await SessionSets.create({
-        sessionExerciseGuid: result1.dataValues.exerciseGuid,
-        weight: set.weight,
-        reps: set.reps,
-        rir: set.rir,
-        notes: set.notes || null,
+    if (session.templateName) {
+      templateDB = await WorkoutTemplate.findOne({
+        where: {
+          name: session.templateName,
+          userGuid: userId,
+        },
+        transaction,
       });
     }
-  }
 
-  handleResponse(res, 200, "Session logged");
+    const sessionDB = await WorkoutSession.create(
+      {
+        userGuid: userId,
+        date: session.date,
+        notes: session.notes || null,
+        templateName: session.templateName || "Untitled",
+        templateGuid: templateDB?.dataValues.templateGuid || null,
+      },
+      { transaction }
+    );
+
+    for (const exercise of exercises) {
+      const result1 = await SessionExercises.create(
+        {
+          sessionGuid: sessionDB.dataValues.sessionGuid,
+          name: exercise.name,
+          exercise_number: exercise.exercise_order,
+        },
+        { transaction }
+      );
+
+      for (const set of exercise.sets) {
+        await SessionSets.create(
+          {
+            sessionExerciseGuid: result1.dataValues.exerciseGuid,
+            weight: set.weight,
+            reps: set.reps,
+            rir: set.rir,
+            set_number: set.set_number,
+            notes: set.notes || null,
+          },
+          { transaction }
+        );
+      }
+    }
+    await transaction.commit();
+
+    handleResponse(res, 200, "Session logged");
+  } catch (error) {
+    await transaction.rollback();
+    next(error);
+  }
+};
+
+export const deleteSession = async (req, res, next) => {
+  const sessionId = req.params.id;
+  await WorkoutSession.destroy({
+    where: { sessionGuid: sessionId },
+  });
+  handleResponse(res, 200, "Session deleted");
 };

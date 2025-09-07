@@ -2,7 +2,6 @@ import apiConfig from './config'
 
 export const createWorkoutTemplate = async (data) => {
   const response = await apiConfig.post('/workout/template', data)
-  console.log('rrr', response)
   return response
 }
 

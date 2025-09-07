@@ -21,9 +21,9 @@ const SessionExercises = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    /*  notes: {
+    notes: {
       type: DataTypes.TEXT,
-    }, */
+    },
   },
   {
     timestamps: false,

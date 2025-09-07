@@ -11,15 +11,18 @@ const SessionSets = sequelize.define(
     },
     sessionExerciseGuid: {
       type: DataTypes.UUID,
+      allowNull: false,
     },
     set_number: {
       type: DataTypes.INTEGER,
     },
     weight: {
       type: DataTypes.INTEGER,
+      allowNull: false,
     },
     reps: {
       type: DataTypes.INTEGER,
+      allowNull: false,
     },
     rir: {
       type: DataTypes.INTEGER,

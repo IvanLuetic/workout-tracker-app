@@ -17,20 +17,24 @@ const router = createRouter({
       name: 'AuthPage',
       component: AuthPage,
     },
-    /*  {
-      path: '/admin',
-      component: () => import('@/layouts/AdminLayout.vue'),
-      children: [
-        {
-          path: 'dashboard',
-          component: () => import('@/views/admin/Dashboard.vue')
-        },
-        {
-          path: 'users',
-          component: () => import('@/views/admin/Users.vue')
-        }
-      ]
-    } */
+    {
+      path: '/about',
+      name: 'AboutPage',
+      component: () => import('@/views/AboutPage.vue'),
+    },
+
+    {
+      path: '/profile',
+      name: 'ProfilePage',
+      component: () => import('@/views/ProfilePage.vue'),
+      beforeEnter: forbidUnauthenticated,
+    },
+    {
+      path: '/sessions',
+      name: 'SessionsPage',
+      component: () => import('@/views/SessionsPage.vue'),
+      beforeEnter: forbidUnauthenticated,
+    },
   ],
 })
 

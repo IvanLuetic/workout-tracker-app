@@ -4,7 +4,7 @@
   >
     <div class="w-full max-w-md relative">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-white mb-2">WorkoutLog</h1>
+        <h1 class="text-3xl font-bold text-white mb-2">FitTracker</h1>
         <p class="text-gray-300 text-sm">Track your fitness journey</p>
       </div>
 
@@ -172,7 +172,7 @@ const handleSubmit = async () => {
     })
   } catch (err) {
     console.error(err)
-    errors.value = err.response?.data.message || 'Something has gone wrong. Please try later'
+    errors.value = err.response?.data.message || 'Something went wrong.'
   }
 }
 </script>

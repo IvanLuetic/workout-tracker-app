@@ -18,6 +18,7 @@ WorkoutSession.belongsTo(WorkoutTemplate, {
 WorkoutSession.hasMany(SessionExercises, { foreignKey: "sessionGuid" });
 SessionExercises.belongsTo(WorkoutSession, { foreignKey: "sessionGuid" });
 SessionExercises.hasMany(SessionSets, { foreignKey: "sessionExerciseGuid" });
+SessionSets.belongsTo(SessionExercises, { foreignKey: "sessionExerciseGuid" });
 
 export {
   User,

@@ -1,45 +1,33 @@
 <template>
   <div v-if="isSessionModalOpen">
-    <sessionModal @close="isSessionModalOpen = false"> </sessionModal>
+    <sessionModal @close="isSessionModalOpen = false" @addSession="handleAddSession()">
+    </sessionModal>
   </div>
   <div v-if="isTemplateModalOpen">
     <templateModal @close="isTemplateModalOpen = false"> </templateModal>
   </div>
   <WorkoutsDashboard
+    ref="dashboardComponent"
     @open-add-session-modal="isSessionModalOpen = true"
     @open-add-template-modal="isTemplateModalOpen = true"
-    :workouts="workouts"
   ></WorkoutsDashboard>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
-import sessionModal from '@/components/sessionModal.vue'
-import templateModal from '@/components/templateModal.vue'
+import sessionModal from '@/components/SessionModal.vue'
+import templateModal from '@/components/TemplateModal.vue'
 import WorkoutsDashboard from '@/components/WorkoutsDashboard.vue'
-import { getWorkoutSessions } from '@/api/workoutSession'
 
+const dashboardComponent = ref(null)
+
+const updateSessions = () => {
+  dashboardComponent.value.fetchSessions()
+}
+const handleAddSession = () => {
+  updateSessions()
+}
 const isSessionModalOpen = ref(false)
 const isTemplateModalOpen = ref(false)
-
-const workouts = ref([])
-const fetchSessions = async () => {
-  workouts.value = await getWorkoutSessions()
-}
-onMounted(() => {
-  fetchSessions()
-})
 </script>
-
-<style scoped>
-/* Optional: Custom scrollbar for dark theme */
-::-webkit-scrollbar {
-  width: 8px;
-  background: #1a1a1a;
-}
-::-webkit-scrollbar-thumb {
-  background: #b91c1c;
-  border-radius: 4px;
-}
-</style>

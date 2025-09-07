@@ -6,20 +6,13 @@ import authRouter from "./src/routes/authRouter.js";
 import workoutRouter from "./src/routes/workoutRouter.js";
 import handleError from "./src/controllers/errorController.js";
 import CustomError from "./src/utils/customError.js";
-import multer from "multer";
+import swaggerUi from "swagger-ui-express";
+import specs from "./swaggerConfig.js";
 
 dotenv.config();
 
-// Initialize Express app
 const app = express();
 
-// Configure Multer (memory storage for example)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-});
-
-// Middleware setup
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,8 +25,10 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
 app.use("/api/auth", authRouter);
-app.use("/api/workout", upload.single("file"), workoutRouter);
+app.use("/api/workout", workoutRouter);
 
 app.all("*all", (req, res, next) => {
   const err = new CustomError(`The URL ${req.originalUrl} does not exist`, 404);

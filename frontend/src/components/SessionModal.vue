@@ -1,20 +1,42 @@
 <template>
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div
+      v-if="errors"
+      class="p-4 absolute top-5 mx-5 bg-red-900/50 border border-red-700 rounded-lg backdrop-blur-sm"
+    >
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex">
+          <svg
+            class="w-5 h-5 text-red-400 mr-3 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z"
+            ></path>
+          </svg>
+          <span class="text-red-200 text-sm">{{ errors }}</span>
+        </div>
+        <span @click="errors = ''" class="text-gray-400 text-lg cursor-pointer">x</span>
+      </div>
+    </div>
     <form
       class="bg-gray-900 text-white rounded-lg w-full md:w-3/4 lg:1/2 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
     >
-      <!-- Header -->
       <div class="flex flex-col p-3 border-b border-gray-700">
         <div class="flex items-center gap-3 mb-4 px-1">
-          <h3 class="font-semibold flex-1 min-w-30 truncate">{{ workoutSession.name }}</h3>
+          <h3 class="font-semibold flex-1 min-w-30 truncate">{{ workoutSession.templateName }}</h3>
           <input
             type="date"
-            v-model="workoutSession.workout_date"
+            v-model="workoutSession.date"
             class="bg-gray-800 border border-gray-600 rounded text-white px-2 py-1 text-sm flex-1 min-w-10 max-w-35"
           />
         </div>
 
-        <!-- Template Selection -->
         <select
           v-model="selectedTemplate"
           @focus="getUserTemplates"
@@ -27,7 +49,6 @@
           </option>
         </select>
 
-        <!-- Session Notes -->
         <textarea
           v-model="workoutSession.notes"
           placeholder="Workout notes..."
@@ -36,7 +57,6 @@
         ></textarea>
       </div>
 
-      <!-- Exercises -->
       <div class="overflow-y-auto overflow-x-hidden p-3 max-w-full">
         <div class="space-y-3">
           <div
@@ -44,7 +64,6 @@
             :key="exerciseIndex"
             class="bg-gray-800 rounded-lg p-3"
           >
-            <!-- Exercise Header -->
             <div
               class="grid grid-cols-[1.7rem_1fr_1rem] md:grid-cols-[2.5rem_1fr_1rem] gap-1.5 items-center py-1 mb-2"
             >
@@ -59,11 +78,12 @@
 
               <input
                 required
-                :ref="(el) => setInputRef(el, exerciseIndex, 'exercise', 'name')"
                 type="text"
+                id="exercise"
                 v-model="exercise.name"
                 placeholder="Exercise name"
-                @keydown.enter="focusNext(exerciseIndex, 'exercise', 'name')"
+                :tabindex="exerciseIndex * 100 + 1"
+                @keydown.enter="focusNext"
                 class="bg-gray-700 border border-gray-600 rounded text-white px-2 py-1 text-sm flex-1"
               />
 
@@ -75,9 +95,8 @@
                 ×
               </button>
             </div>
-            <!-- Sets -->
+
             <div class="mt-2">
-              <!-- Header -->
               <div
                 class="grid grid-cols-[1rem_3rem_2rem_2rem_1fr_1rem] md:grid-cols-[2rem_4rem_2.5rem_2.5rem_1fr_2.5rem] gap-1.5 pb-1 border-b border-gray-600 mb-1 text-xs font-medium text-gray-400"
               >
@@ -88,7 +107,6 @@
                 <div>NOTES</div>
               </div>
 
-              <!-- Sets -->
               <div
                 v-for="(set, setIndex) in exercise.sets"
                 :key="setIndex"
@@ -96,13 +114,12 @@
               >
                 <div class="text-center text-sm font-medium">{{ set.set_number }}</div>
 
-                <!-- Weight  -->
                 <input
                   type="number"
-                  :ref="(el) => setInputRef(el, exerciseIndex, setIndex, 'weight')"
                   v-model.number="set.weight"
                   placeholder="0"
-                  @keydown.enter="focusNext(exerciseIndex, setIndex, 'weight')"
+                  @keydown.enter="focusNext"
+                  :tabindex="exerciseIndex * 100 + setIndex * 10 + 2"
                   class="bg-gray-700 border border-gray-600 rounded text-white px-1 py-1 w-full text-center text-xs"
                   step="0.5"
                   min="0"
@@ -110,40 +127,35 @@
 
                 <div class="text-center text-xs text-gray-400">x</div>
 
-                <!-- Reps  -->
                 <input
                   type="number"
-                  :ref="(el) => setInputRef(el, exerciseIndex, setIndex, 'reps')"
+                  :tabindex="exerciseIndex * 100 + setIndex * 10 + 3"
                   v-model.number="set.reps"
                   placeholder="0"
-                  @keydown.enter="focusNext(exerciseIndex, setIndex, 'reps')"
+                  @keydown.enter="focusNext"
                   class="bg-gray-700 border border-gray-600 rounded text-white px-1 py-1 w-full text-center text-xs"
                   min="0"
                 />
 
-                <!-- RIR  -->
                 <input
                   type="number"
-                  :ref="(el) => setInputRef(el, exerciseIndex, setIndex, 'rir')"
+                  :tabindex="exerciseIndex * 100 + setIndex * 10 + 4"
                   v-model.number="set.rir"
                   placeholder="0"
-                  @keydown.enter="focusNext(exerciseIndex, setIndex, 'rir')"
+                  @keydown.enter="focusNext"
                   class="bg-gray-700 border border-gray-600 rounded text-white px-1 py-1 w-full text-center text-xs"
                   min="0"
                   max="10"
                 />
 
-                <!-- Notes  -->
                 <textarea
-                  :ref="(el) => setInputRef(el, exerciseIndex, setIndex, 'notes')"
                   v-model="set.notes"
                   placeholder="Notes..."
-                  @keydown.enter="focusNext(exerciseIndex, setIndex, 'notes')"
+                  @keydown.enter="focusNext"
                   class="bg-gray-700 border workoutInput border-gray-600 rounded text-white px-2 py-1 text-xs resize-none w-full focus:w-[80vw] focus:mx-auto focus:h-20 focus:text-sm focus:fixed focus:inset-x-4 focus:top-1/2 focus:transform focus:-translate-y-1/2 focus:z-50 md:focus:w-full md:focus:h-auto md:focus:text-xs md:focus:static md:focus:inset-auto md:focus:top-auto md:focus:transform-none md:focus:translate-y-0 md:focus:z-auto"
                   rows="1"
                 />
 
-                <!-- Remove Set Button -->
                 <button
                   type="button"
                   @click="removeSet(exerciseIndex, setIndex)"
@@ -153,7 +165,6 @@
                 </button>
               </div>
 
-              <!-- Add Set Button -->
               <button
                 type="button"
                 @click="addSet(exerciseIndex)"
@@ -164,7 +175,6 @@
             </div>
           </div>
 
-          <!-- Add Exercise Button -->
           <button
             type="button"
             @click="addExercise"
@@ -174,8 +184,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Action Buttons -->
       <div class="flex gap-3 p-3 border-t border-gray-700">
         <button
           type="button"
@@ -200,106 +208,55 @@
 import { createWorkoutSession } from '@/api/workoutSession'
 import { getAllWorkoutTemplates } from '@/api/workoutTemplate'
 import { ref, nextTick, onMounted, defineEmits } from 'vue'
-const emit = defineEmits(['close'])
-
-const inputRefs = ref({})
+const emit = defineEmits(['close', 'addSession'])
 
 const exercises = ref([])
+const errors = ref('')
 
 const workoutTemplates = ref([])
 const selectedTemplate = ref('')
-// Set input reference with organized structure
-const setInputRef = (el, exerciseIndex, setIndex, type) => {
-  if (el) {
-    if (!inputRefs.value[exerciseIndex]) {
-      inputRefs.value[exerciseIndex] = {}
-    }
-    if (!inputRefs.value[exerciseIndex][setIndex]) {
-      inputRefs.value[exerciseIndex][setIndex] = {}
-    }
-    inputRefs.value[exerciseIndex][setIndex][type] = el
-  }
-}
-
-const getNextInput = (exerciseIndex, setIndex, currentType) => {
-  const typeOrder = ['name', 'weight', 'reps', 'rir', 'notes']
-  const currentTypeIndex = typeOrder.indexOf(currentType)
-
-  // If it's the exercise name, go to first set's weight
-  if (currentType === 'name') {
-    return inputRefs.value[exerciseIndex]?.[0]?.['weight']
-  }
-
-  // If it's the last field of a set (notes), go to next set's weight
-  if (currentType === 'notes') {
-    const nextSetIndex = setIndex + 1
-    const currentExercise = exercises.value[exerciseIndex]
-
-    // If there's a next set in current exercise
-    if (nextSetIndex < currentExercise.sets.length) {
-      return inputRefs.value[exerciseIndex]?.[nextSetIndex]?.['weight']
-    }
-
-    // If no more sets, go to next exercise's name
-    const nextExerciseIndex = exerciseIndex + 1
-    if (nextExerciseIndex < exercises.value.length) {
-      return inputRefs.value[nextExerciseIndex]?.['exercise']?.['name']
-    }
-
-    // No more inputs
-    return null
-  }
-
-  // Move to next field in same set
-  const nextTypeIndex = currentTypeIndex + 1
-  if (nextTypeIndex < typeOrder.length) {
-    const nextType = typeOrder[nextTypeIndex]
-    return inputRefs.value[exerciseIndex]?.[setIndex]?.[nextType]
-  }
-
-  return null
-}
-
-// Focus the next input
-const focusNext = (exerciseIndex, setIndex, currentType) => {
-  const nextInput = getNextInput(exerciseIndex, setIndex, currentType)
-  if (nextInput) {
-    nextInput.focus()
-  }
-}
-
-// Focus first input on mount
-onMounted(async () => {
-  await nextTick()
-  if (exercises.value.length > 0) {
-    const firstInput = inputRefs.value[0]?.['exercise']?.['name']
-    if (!firstInput.value) {
-      firstInput.focus()
-    }
-  }
-})
 
 const workoutSession = ref({
-  date: new Date().toISOString().split('T')[0],
+  date: new Date().toISOString(),
   templateName: 'Untitled',
   notes: '',
   templateGuid: null,
 })
 
+const focusNext = (event) => {
+  const currentTabIndex = parseInt(event.target.tabIndex)
+  const allInputs = Array.from(document.querySelectorAll('input[tabindex]')).sort(
+    (a, b) => parseInt(a.tabIndex) - parseInt(b.tabIndex),
+  )
+
+  const currentIndex = allInputs.findIndex((input) => parseInt(input.tabIndex) === currentTabIndex)
+  if (currentIndex !== -1 && currentIndex < allInputs.length - 1) {
+    allInputs[currentIndex + 1].focus()
+  }
+}
+
+onMounted(async () => {
+  await nextTick()
+  if (exercises.value.length > 0) {
+    const firstInput1 = document.querySelector('#exercise')
+    firstInput1.focus()
+  }
+})
+
 const createNewSet = (setNumber) => {
   return {
     set_number: setNumber,
-    weight: 0,
-    reps: 0,
-    rir: 0,
+    weight: null,
+    reps: null,
+    rir: null,
     notes: '',
   }
 }
 
-const createNewExercise = (name = '', index) => {
+const createNewExercise = (name = '', order) => {
   return {
     name,
-    exercise_order: index,
+    exercise_order: order || 1,
     notes: null,
     sets: [createNewSet(1)],
   }
@@ -331,7 +288,7 @@ const removeSet = (exerciseIndex, setIndex) => {
   updateSetOrder(exerciseIndex)
 }
 const addExercise = () => {
-  const index = exercises.value?.length || 0
+  const index = exercises.value?.length + 1 || 0
   exercises.value.push(createNewExercise(null, index))
 }
 
@@ -351,38 +308,28 @@ const updateSetOrder = (exerciseIndex) => {
 }
 
 const handleOrderChange = (exerciseIndex) => {
-  // At this point, v-model has already updated exercise.exercise_order
-  // with the user's input, so we can use it directly
   updateExerciseOrderOnChange(exerciseIndex, exercises.value[exerciseIndex].exercise_order)
 }
 const updateExerciseOrderOnChange = (exerciseIndex, newOrder) => {
   const totalExercises = exercises.value.length
 
-  // Validate input
   const targetOrder = parseInt(newOrder)
   if (isNaN(targetOrder) || targetOrder < 1 || targetOrder > totalExercises) {
     alert(`Please enter a valid order between 1 and ${totalExercises}`)
-    // Reset to current array position + 1 (since we display 1-based)
     exercises.value[exerciseIndex].exercise_order = exerciseIndex + 1
     return
   }
-
-  // Current position in 1-based terms
   const currentOrder = exerciseIndex + 1
 
-  // No change needed
   if (currentOrder === targetOrder) {
     return
   }
   const exerciseToMove = exercises.value[exerciseIndex]
 
-  // Remove from current position
   exercises.value.splice(exerciseIndex, 1)
 
-  // Insert at new position (targetOrder - 1 because splice uses 0-based indexing)
   exercises.value.splice(targetOrder - 1, 0, exerciseToMove)
 
-  // Update ALL exercise_order values to match new array positions
   exercises.value.forEach((exercise, index) => {
     exercise.exercise_order = index + 1
   })
@@ -394,17 +341,10 @@ const cancelWorkout = () => {
     emit('close')
   }
 }
-const saveWorkout = async () => {
-  await createWorkoutSession({
-    session: workoutSession.value,
-    exercises: exercises.value,
-  })
-  emit('close')
-}
 const resetForm = () => {
   workoutSession.value = {
+    date: new Date().toISOString(),
     templateGuid: null,
-    workout_date: new Date().toISOString().split('T')[0],
     templateName: 'Untitled',
     notes: '',
   }
@@ -412,35 +352,26 @@ const resetForm = () => {
   selectedTemplate.value = ''
 }
 
-const loadTemplate = (template) => {
-  if (template && template.exercises) {
-    workoutSession.value.name = template.name
-    workoutSession.value.template_id = template.id
-
-    exercises.value = template.exercises.map((ex, index) => ({
-      name: ex.name,
-      exercise_order: index + 1,
-      sets: Array(ex.target_sets || 3)
-        .fill()
-        .map((_, setIndex) => createNewSet(setIndex + 1)),
-    }))
-  }
-}
-
 const getUserTemplates = async () => {
   const templates = await getAllWorkoutTemplates()
   workoutTemplates.value = templates
 }
 
-// Lifecycle
-onMounted(() => {
-  // Add first exercise by default
-  addExercise()
-})
+const saveWorkout = async () => {
+  try {
+    await createWorkoutSession({
+      session: workoutSession.value,
+      exercises: exercises.value,
+    })
+    emit('addSession')
+    emit('close')
+  } catch (err) {
+    console.log(err)
+    errors.value = err.response?.data?.message || 'Something went wrong'
+  }
+}
 
-// Expose methods that might be called by parent component
-defineExpose({
-  loadTemplate,
-  resetForm,
+onMounted(() => {
+  addExercise()
 })
 </script>

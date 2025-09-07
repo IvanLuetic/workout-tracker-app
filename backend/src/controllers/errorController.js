@@ -74,7 +74,7 @@ const handleJWTExpiredError = (err) => {
 
 const handleError = async (error, req, res, next) => {
   if (res.headersSent) {
-    return next(error); // Pass the error to the default error handler
+    return next(error);
   }
   console.error("ERROR:", error);
   error.statusCode = error.statusCode || 500;

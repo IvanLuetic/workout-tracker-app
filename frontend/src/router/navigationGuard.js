@@ -7,7 +7,7 @@ export const forbidUnauthenticated = async () => {
 
   try {
     const user = await fetchUser()
-    userStore.user = user
+    userStore.currentUser = user
     return true
   } catch {
     return { name: 'AuthPage' }
