@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@plugin "daisyui";
 
 :root {
   --step--2: clamp(0.7rem, 0.69rem + 0.03vw, 0.75rem);

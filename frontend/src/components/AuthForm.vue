@@ -37,14 +37,14 @@
         class="flex flex-col bg-black/30 border border-gray-700/50 rounded-2xl p-8 pt-5 shadow-2xl"
       >
         <div class="flex justify-center items-center mb-5">
-          <h3 class="text-center tracking-wide">
+          <h3 class="text-center text-gray-200 tracking-wide">
             {{ isLogin ? 'Log in' : 'Register' }}
           </h3>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="relative flex items-center">
+            <div class="absolute pl-3 pointer-events-none">
               <svg
                 class="w-5 h-5 text-gray-400"
                 fill="none"
@@ -67,8 +67,8 @@
             />
           </div>
 
-          <div v-if="!isLogin" class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div v-if="!isLogin" class="relative flex items-center">
+            <div class="absolute pl-3 flex items-center pointer-events-none">
               <svg
                 class="w-5 h-5 text-gray-400"
                 fill="none"
@@ -91,8 +91,8 @@
             />
           </div>
 
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="relative flex items-center">
+            <div class="absolute pl-3 flex items-center pointer-events-none">
               <svg
                 class="w-5 h-5 text-gray-400"
                 fill="none"
@@ -123,19 +123,17 @@
             <span v-else>Sign Up</span>
           </button>
         </form>
-        <div class="mt-6 text-center">
-          <p class="text-gray-400 text-sm">
-            <span v-if="isLogin">Don't have an account?</span>
-            <span v-else>Already have an account?</span>
-            <span
-              @click="isLogin = !isLogin"
-              class="ml-2 text-red-400 hover:text-red-300 font-medium cursor-pointer hover:underline"
-            >
-              <span v-if="isLogin">Sign up here</span>
-              <span v-else>Sign in here</span>
-            </span>
-          </p>
-        </div>
+        <p class="mt-6 text-center text-gray-400 text-sm">
+          <span v-if="isLogin" class="block sm:inline">Don't have an account? </span>
+          <span v-else class="block sm:inline">Already have an account? </span>
+          <span
+            @click="isLogin = !isLogin"
+            class="text-red-400 hover:text-red-300 font-medium cursor-pointer hover:underline"
+          >
+            <span v-if="isLogin" class="text-center">Sign up here</span>
+            <span v-else class="text-center">Sign in here</span>
+          </span>
+        </p>
       </div>
     </div>
   </div>
@@ -156,12 +154,6 @@ const errors = ref('')
 const router = useRouter()
 
 const handleSubmit = async () => {
-  const data = {
-    username: username.value,
-    email: email.value,
-    password: password.value,
-  }
-  console.log(data)
   try {
     const response = await (isLogin.value
       ? login({ username: username.value, password: password.value })

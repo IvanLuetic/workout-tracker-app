@@ -88,7 +88,7 @@
                       {{ set.reps || '-' }}
                     </td>
                     <td class="py-3 px-3 text-center">
-                      <span class="px-2 py-1 rounded text-sm font-medium">
+                      <span class="px-2 py-1 text-white rounded text-sm font-medium">
                         {{ set.rir }}
                       </span>
                     </td>
@@ -116,12 +116,11 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
 import { deleteSession } from '@/api/workoutSession'
 
 const emit = defineEmits(['closeSessionView', 'deleteSession'])
 
-const props = defineProps({
+const { workout } = defineProps({
   workout: {
     type: Object,
     required: true,
@@ -129,7 +128,6 @@ const props = defineProps({
 })
 
 const formatDate = (dateString) => {
-  console.log(props.workout)
   const date = new Date(dateString)
   return date.toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -140,8 +138,8 @@ const formatDate = (dateString) => {
     minute: '2-digit',
   })
 }
-
 const handleDeleteSession = async (id) => {
+  if (!confirm('Are you sure you want to delete')) return
   await deleteSession(id)
   emit('deleteSession')
   emit('closeSessionView')

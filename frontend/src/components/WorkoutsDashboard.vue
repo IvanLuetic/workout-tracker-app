@@ -98,7 +98,6 @@
         </div>
 
         <div v-if="workouts.length === 0" class="text-center py-12">
-          <div class="text-gray-500 text-6xl mb-4">💪</div>
           <h3 class="text-xl font-semibold text-gray-400 mb-2">No workouts yet</h3>
           <p class="text-gray-500 mb-6">
             Start your fitness journey by creating your first workout
