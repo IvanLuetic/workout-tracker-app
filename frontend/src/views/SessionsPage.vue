@@ -87,7 +87,7 @@
         </button>
 
         <button
-          v-for="page in visiblePages"
+          v-for="page in totalPages"
           :key="page"
           @click="goToPage(page)"
           :class="[
@@ -104,10 +104,10 @@
           @click="goToPage(currentPage + 1)"
           :disabled="currentPage === totalPages"
           :class="[
-            'px-3 py-2 cursor-pointer rounded-lg font-medium transition-colors',
+            'px-3 py-2  rounded-lg font-medium transition-colors',
             currentPage === totalPages
               ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white',
+              : 'bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600 hover:text-white',
           ]"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,14 +156,6 @@ const pageSize = ref(6)
 const totalWorkouts = ref(0)
 const totalPages = computed(() => Math.ceil(totalWorkouts.value / pageSize.value))
 
-const visiblePages = computed(() => {
-  const pages = []
-  const total = totalPages.value
-  for (let i = 1; i <= total; i++) {
-    pages.push(i)
-  }
-  return pages
-})
 const openSessionView = (workout) => {
   selectedWorkout.value = workout
   showSessionView.value = true
@@ -184,13 +176,11 @@ const fetchSessions = async (page = 1, pageSize = 6, templateName = '') => {
 }
 
 const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
-    fetchSessions(page, pageSize.value, selectedTemplate.value)
-  }
+  fetchSessions(page, pageSize.value, selectedTemplate.value)
 }
 
 const handleDeleteSession = async () => {
-  await fetchSessions(currentPage.value, pageSize.value, selectedTemplate.value) // Pass all parameters
+  await fetchSessions(currentPage.value, pageSize.value, selectedTemplate.value)
 }
 
 const getUserTemplates = async () => {
